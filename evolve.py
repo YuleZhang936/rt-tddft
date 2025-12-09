@@ -35,6 +35,7 @@ from pyscf.x2c import x2c as x2c_mod
 
 Array = np.ndarray
 _C_AU = 137.035999084  # speed of light in atomic units
+_HARTREE_TO_EV = 27.211386245988
 _CART_AXES = ("x", "y", "z")
 _AXIS_TO_INDEX = {axis: idx for idx, axis in enumerate(_CART_AXES)}
 
@@ -799,8 +800,9 @@ def simulate_delta_kick_response(
 def _plot_strength_function(
     omega: ArrayLike, strength: ArrayLike, path: Union[str, Path]
 ) -> Path:
-    """Save a plot of ``S(omega)`` vs ``omega`` and return the path."""
+    """Save a plot of ``S(omega)`` vs energy (eV) and return the path."""
     omega_arr = np.asarray(omega, dtype=float)
+    energy_ev = omega_arr * _HARTREE_TO_EV  # omega (a.u.) equals energy in Ha
     strength_arr = np.asarray(strength, dtype=float)
     target = Path(path)
     if target.parent and not target.parent.exists():
@@ -819,10 +821,11 @@ def _plot_strength_function(
         ) from exc
 
     fig, ax = plt.subplots(figsize=(6, 4))
-    ax.plot(omega_arr, strength_arr, lw=1.5)
-    ax.set_xlabel(r"$\omega$ (a.u.)")
+    ax.plot(energy_ev, strength_arr, lw=1.5)
+    ax.set_xlabel("Energy (eV)")
     ax.set_ylabel(r"$S(\omega)$")
     ax.set_title("Dipole Strength Function")
+    ax.set_xlim(0.0, 20.0)
     ax.grid(True, which="both", ls="--", lw=0.5, alpha=0.5)
     fig.tight_layout()
     fig.savefig(target, dpi=300)
